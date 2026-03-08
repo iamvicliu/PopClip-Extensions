@@ -13,6 +13,12 @@ My collection of PopClip extensions.
 - Latest release: <https://github.com/iamvicliu/PopClip-Extensions/releases/latest>
 - Direct package: <https://github.com/iamvicliu/PopClip-Extensions/releases/download/v1.0.1/IPLookup.popclipextz>
 
+### Release Script
+
+```bash
+./scripts/release-popclip.sh IPLookup.popclipext v1.0.2
+```
+
 ### Directory Publishing
 
 This repository is structured for publishing extensions from a personal GitHub repository.
@@ -42,6 +48,12 @@ Current directory `include` path:
 
 - 最新版本：<https://github.com/iamvicliu/PopClip-Extensions/releases/latest>
 - 直接下载：<https://github.com/iamvicliu/PopClip-Extensions/releases/download/v1.0.1/IPLookup.popclipextz>
+
+### 发布脚本
+
+```bash
+./scripts/release-popclip.sh IPLookup.popclipext v1.0.2
+```
 
 ### 目录发布
 
