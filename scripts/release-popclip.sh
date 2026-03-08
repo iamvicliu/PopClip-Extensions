@@ -57,8 +57,9 @@ fi
 
 package_name="${extension_dir:t}.z"
 package_basename="${extension_dir:t}.z"
+extension_basename="${extension_dir:t}"
 release_title="$tag"
-release_notes="Release $tag for ${extension_dir:t}."
+release_notes="Release $tag for $extension_basename."
 repo_root="$(git rev-parse --show-toplevel)"
 root_readme="$repo_root/README.md"
 extension_readme="$repo_root/$extension_dir/README.md"
@@ -67,7 +68,7 @@ download_url="https://github.com/iamvicliu/PopClip-Extensions/releases/download/
 update_readme_links() {
   local file="$1"
   [[ -f "$file" ]] || return 0
-  perl -0pi -e 's#https://github\.com/iamvicliu/PopClip-Extensions/releases/download/v[0-9][^/\s]*/IPLookup\.popclipextz#'"$download_url"'#g' "$file"
+  perl -0pi -e 's#https://github\.com/iamvicliu/PopClip-Extensions/releases/download/v[0-9][^/\s]*/\Q'"$package_basename"'\E#'"$download_url"'#g' "$file"
 }
 
 echo "Updating README download links to $tag"
