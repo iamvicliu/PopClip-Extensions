@@ -11,10 +11,11 @@ Example:
   ./scripts/release-popclip.sh IPLookup.popclipext v1.0.2
 
 Behavior:
-  1. Packages the extension directory into a .popclipextz file
-  2. Creates the git tag if it does not already exist
-  3. Pushes the current branch and the tag to origin
-  4. Creates or updates the GitHub release and uploads the package asset
+  1. Updates README direct download links to the target tag
+  2. Packages the extension directory into a .popclipextz file
+  3. Creates the git tag if it does not already exist
+  4. Pushes the current branch and the tag to origin
+  5. Creates or updates the GitHub release and uploads the package asset
 EOF
 }
 
@@ -55,8 +56,29 @@ if [[ -n "$(git status --short)" ]]; then
 fi
 
 package_name="${extension_dir:t}.z"
+package_basename="${extension_dir:t}.z"
 release_title="$tag"
 release_notes="Release $tag for ${extension_dir:t}."
+repo_root="$(git rev-parse --show-toplevel)"
+root_readme="$repo_root/README.md"
+extension_readme="$repo_root/$extension_dir/README.md"
+download_url="https://github.com/iamvicliu/PopClip-Extensions/releases/download/$tag/$package_basename"
+
+update_readme_links() {
+  local file="$1"
+  [[ -f "$file" ]] || return 0
+  perl -0pi -e 's#https://github\.com/iamvicliu/PopClip-Extensions/releases/download/v[0-9][^/\s]*/IPLookup\.popclipextz#'"$download_url"'#g' "$file"
+}
+
+echo "Updating README download links to $tag"
+update_readme_links "$root_readme"
+update_readme_links "$extension_readme"
+
+if [[ -n "$(git status --short)" ]]; then
+  echo "Committing README download link updates"
+  git add "$root_readme" "$extension_readme"
+  git commit -m "Update release links for $tag"
+fi
 
 echo "Packaging $extension_dir -> $package_name"
 rm -f "$package_name"
