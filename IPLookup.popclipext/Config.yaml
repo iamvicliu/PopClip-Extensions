@@ -1,0 +1,29 @@
+identifier: com.vicliu.popclip.ip-lookup
+popclip version: 4151
+name:
+  en: IP Lookup
+  zh-hans: IP 查询
+  zh-hant: IP 查詢
+description:
+  en: Look up basic information about an IPv4 or IPv6 address.
+  zh-hans: 查询 IPv4 或 IPv6 地址的基本信息。
+  zh-hant: 查詢 IPv4 或 IPv6 位址的基本資訊。
+app:
+  name: IPinfo
+  link: https://ipinfo.io/
+entitlements: [network]
+regex: '^(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}|(?:[0-9A-Fa-f:.]*:[0-9A-Fa-f:.]+))$'
+actions:
+  - title:
+      en: Lookup IP
+      zh-hans: 查询 IP
+      zh-hant: 查詢 IP
+    icon: symbol:network
+    after: show-result
+    javascript file: lookup.js
+  - title:
+      en: Open Details
+      zh-hans: 打开详情页
+      zh-hant: 打開詳情頁
+    icon: symbol:safari
+    url: https://ipinfo.io/{popclip text}
