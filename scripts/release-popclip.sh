@@ -64,6 +64,7 @@ repo_root="$(git rev-parse --show-toplevel)"
 root_readme="$repo_root/README.md"
 extension_readme="$repo_root/$extension_dir/README.md"
 download_url="https://github.com/iamvicliu/PopClip-Extensions/releases/download/$tag/$package_basename"
+extension_readme_link="./$extension_dir"
 
 update_readme_links() {
   local file="$1"
@@ -71,9 +72,31 @@ update_readme_links() {
   perl -0pi -e 's#https://github\.com/iamvicliu/PopClip-Extensions/releases/download/v[0-9][^/\s]*/\Q'"$package_basename"'\E#'"$download_url"'#g' "$file"
 }
 
+ensure_root_readme_entry() {
+  [[ -f "$root_readme" ]] || return 0
+
+  if ! rg -Fq "$extension_readme_link" "$root_readme"; then
+    cat >>"$root_readme" <<EOF
+
+### ${extension_basename%.*}
+
+- Source: [$extension_basename]($extension_readme_link)
+- Latest release: <https://github.com/iamvicliu/PopClip-Extensions/releases/latest>
+- Direct package: <$download_url>
+
+### ${extension_basename%.*}（中文）
+
+- 源码目录：[$extension_basename]($extension_readme_link)
+- 最新版本：<https://github.com/iamvicliu/PopClip-Extensions/releases/latest>
+- 直接下载：<$download_url>
+EOF
+  fi
+}
+
 echo "Updating README download links to $tag"
 update_readme_links "$root_readme"
 update_readme_links "$extension_readme"
+ensure_root_readme_entry
 
 if [[ -n "$(git status --short)" ]]; then
   echo "Committing README download link updates"
