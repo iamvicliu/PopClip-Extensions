@@ -10,6 +10,11 @@ Look up basic information about an IPv4 or IPv6 address from selected text.
 - Shows a compact result in PopClip
 - Opens a full details page in the browser
 
+### Download
+
+- Latest release: <https://github.com/iamvicliu/PopClip-Extensions/releases/latest>
+- Direct package: <https://github.com/iamvicliu/PopClip-Extensions/releases/download/v1.0.1/IPLookup.popclipextz>
+
 ### Data Sources
 
 - Query API: [IP.SB](https://ip.sb/)
@@ -42,6 +47,11 @@ Vic Liu
 - 同时支持 IPv4 和 IPv6
 - 在 PopClip 中显示精简查询结果
 - 在浏览器中打开完整详情页
+
+### 下载
+
+- 最新版本：<https://github.com/iamvicliu/PopClip-Extensions/releases/latest>
+- 直接下载：<https://github.com/iamvicliu/PopClip-Extensions/releases/download/v1.0.1/IPLookup.popclipextz>
 
 ### 数据来源
 

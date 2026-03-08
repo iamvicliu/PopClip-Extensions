@@ -8,6 +8,11 @@ My collection of PopClip extensions.
 
 - [IPLookup.popclipext](./IPLookup.popclipext): Look up basic information about IPv4 and IPv6 addresses.
 
+### Download
+
+- Latest release: <https://github.com/iamvicliu/PopClip-Extensions/releases/latest>
+- Direct package: <https://github.com/iamvicliu/PopClip-Extensions/releases/download/v1.0.1/IPLookup.popclipextz>
+
 ### Directory Publishing
 
 This repository is structured for publishing extensions from a personal GitHub repository.
@@ -32,6 +37,11 @@ Current directory `include` path:
 ### 插件列表
 
 - [IPLookup.popclipext](./IPLookup.popclipext)：查询 IPv4 和 IPv6 地址的基本信息。
+
+### 下载
+
+- 最新版本：<https://github.com/iamvicliu/PopClip-Extensions/releases/latest>
+- 直接下载：<https://github.com/iamvicliu/PopClip-Extensions/releases/download/v1.0.1/IPLookup.popclipextz>
 
 ### 目录发布
 
