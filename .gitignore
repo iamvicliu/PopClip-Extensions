@@ -1,2 +1,8 @@
 .DS_Store
 *.popclipextz
+
+# 只在本机使用、不公开的扩展：
+# 115 很久没验证；Hermes、OpenClaw 写死了个人路径和 Telegram 账号
+115-Offline-Download.popclipext/
+SendToHermes.popclipext/
+SendToOpenClaw.popclipext/

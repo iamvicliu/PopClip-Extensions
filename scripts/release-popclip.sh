@@ -55,8 +55,9 @@ if [[ -n "$(git status --short)" ]]; then
   exit 1
 fi
 
-package_name="${extension_dir:t}.z"
-package_basename="${extension_dir:t}.z"
+# PopClip packages end in .popclipextz (no dot before the z).
+package_name="${extension_dir:t}z"
+package_basename="${extension_dir:t}z"
 extension_basename="${extension_dir:t}"
 release_title="$tag"
 release_notes="Release $tag for $extension_basename."
@@ -75,21 +76,11 @@ update_readme_links() {
 ensure_root_readme_entry() {
   [[ -f "$root_readme" ]] || return 0
 
-  if ! rg -Fq "$extension_readme_link" "$root_readme"; then
-    cat >>"$root_readme" <<EOF
-
-### ${extension_basename%.*}
-
-- Source: [$extension_basename]($extension_readme_link)
-- Latest release: <https://github.com/iamvicliu/PopClip-Extensions/releases/latest>
-- Direct package: <$download_url>
-
-### ${extension_basename%.*}（中文）
-
-- 源码目录：[$extension_basename]($extension_readme_link)
-- 最新版本：<https://github.com/iamvicliu/PopClip-Extensions/releases/latest>
-- 直接下载：<$download_url>
-EOF
+  # The extension list is hand-written; refuse to release an extension it doesn't mention
+  # instead of appending a section in a format that no longer matches the README.
+  if ! grep -Fq "$extension_readme_link" "$root_readme"; then
+    echo "README.md does not list $extension_basename yet. Add it to the extension table first." >&2
+    exit 1
   fi
 }
 
