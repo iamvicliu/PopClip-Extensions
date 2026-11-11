@@ -20,12 +20,10 @@ actions:
       zh-hant: 查詢 IP
     icon: symbol:network
     after: show-result
-    interpreter: /bin/zsh
-    shell script file: lookup.sh
+    javascript file: lookup.js
   - title:
       en: Open Details
       zh-hans: 打开详情页
       zh-hant: 打開詳情頁
     icon: symbol:safari
-    interpreter: /bin/zsh
-    shell script file: open.sh
+    javascript file: open.js
