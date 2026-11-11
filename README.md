@@ -6,7 +6,7 @@
 
 | 扩展 | 在 PopClip 里的名字 | 做什么 | 下载 |
 | --- | --- | --- | --- |
-| [IPLookup](./IPLookup.popclipext) | IP 查询 | 选中一个或多个 IPv4 / IPv6 地址（兼容带端口格式），直接显示公网位置、ASN 和所属组织，私有段本地直接识别；也可以一键打开详情页 | [IPLookup.popclipextz](https://github.com/iamvicliu/PopClip-Extensions/releases/download/v1.0.2/IPLookup.popclipextz) |
+| [IPLookup](./IPLookup.popclipext) | IP 查询 | 选中一个或多个 IPv4 / IPv6 地址（兼容带端口格式），直接显示公网位置、ASN 和所属组织，私有段本地直接识别；也可以一键打开详情页 | [IPLookup.popclipextz](https://github.com/iamvicliu/PopClip-Extensions/releases/download/v1.0.3/IPLookup.popclipextz) |
 
 每个扩展的详细说明，点进它的目录看 README。
 
@@ -55,6 +55,6 @@ My collection of [PopClip](https://www.popclip.app/) extensions for macOS.
 
 | Extension | Name in PopClip | What it does | Download |
 | --- | --- | --- | --- |
-| [IPLookup](./IPLookup.popclipext) | IP Lookup | Select one or more IPv4 or IPv6 addresses (including `ip:port`) to see public location, ASN, and organization, with local classification for private ranges, or open a full details page | [IPLookup.popclipextz](https://github.com/iamvicliu/PopClip-Extensions/releases/download/v1.0.2/IPLookup.popclipextz) |
+| [IPLookup](./IPLookup.popclipext) | IP Lookup | Select one or more IPv4 or IPv6 addresses (including `ip:port`) to see public location, ASN, and organization, with local classification for private ranges, or open a full details page | [IPLookup.popclipextz](https://github.com/iamvicliu/PopClip-Extensions/releases/download/v1.0.3/IPLookup.popclipextz) |
 
 To install, download the `.popclipextz` file and double-click it. All versions are on the [Releases](https://github.com/iamvicliu/PopClip-Extensions/releases) page. MIT licensed; not affiliated with PopClip.
