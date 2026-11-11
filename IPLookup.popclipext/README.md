@@ -14,7 +14,7 @@ Look up basic information about one or more IPv4 or IPv6 addresses from selected
 ### Download
 
 - Latest release: <https://github.com/iamvicliu/PopClip-Extensions/releases/latest>
-- Direct package: <https://github.com/iamvicliu/PopClip-Extensions/releases/download/v1.0.1/IPLookup.popclipextz>
+- Direct package: <https://github.com/iamvicliu/PopClip-Extensions/releases/download/v1.0.2/IPLookup.popclipextz>
 
 ### Data Sources
 
@@ -54,7 +54,7 @@ Vic Liu
 ### 下载
 
 - 最新版本：<https://github.com/iamvicliu/PopClip-Extensions/releases/latest>
-- 直接下载：<https://github.com/iamvicliu/PopClip-Extensions/releases/download/v1.0.1/IPLookup.popclipextz>
+- 直接下载：<https://github.com/iamvicliu/PopClip-Extensions/releases/download/v1.0.2/IPLookup.popclipextz>
 
 ### 数据来源
 
