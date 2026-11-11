@@ -5,14 +5,14 @@ name:
   zh-hans: IP 查询
   zh-hant: IP 查詢
 description:
-  en: Look up basic information about an IPv4 or IPv6 address.
-  zh-hans: 查询 IPv4 或 IPv6 地址的基本信息。
-  zh-hant: 查詢 IPv4 或 IPv6 位址的基本資訊。
+  en: Look up basic information about one or more IPv4 or IPv6 addresses.
+  zh-hans: 查询一个或多个 IPv4 / IPv6 地址的基本信息。
+  zh-hant: 查詢一個或多個 IPv4 / IPv6 位址的基本資訊。
 app:
   name: IPinfo
   link: https://ipinfo.io/
 entitlements: [network]
-regex: '^(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}|(?:[0-9A-Fa-f:.]*:[0-9A-Fa-f:.]+))$'
+regex: '^\s*\[?(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}|(?:[0-9A-Fa-f:.]*:[0-9A-Fa-f:.]+))\]?(?::\d{1,5})?(?:\s*[,;]?\s*\[?(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}|(?:[0-9A-Fa-f:.]*:[0-9A-Fa-f:.]+))\]?(?::\d{1,5})?)*\s*$'
 actions:
   - title:
       en: Lookup IP
@@ -20,10 +20,12 @@ actions:
       zh-hant: 查詢 IP
     icon: symbol:network
     after: show-result
-    javascript file: lookup.js
+    interpreter: /bin/zsh
+    shell script file: lookup.sh
   - title:
       en: Open Details
       zh-hans: 打开详情页
       zh-hant: 打開詳情頁
     icon: symbol:safari
-    url: https://ipinfo.io/{popclip text}
+    interpreter: /bin/zsh
+    shell script file: open.sh
