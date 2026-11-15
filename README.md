@@ -7,6 +7,7 @@
 | 扩展 | 在 PopClip 里的名字 | 做什么 | 下载 |
 | --- | --- | --- | --- |
 | [IPLookup](./IPLookup.popclipext) | IP 查询 | 选中一个或多个 IPv4 / IPv6 地址（兼容带端口格式），直接显示公网位置、ASN 和所属组织，私有段本地直接识别；也可以一键打开详情页 | [IPLookup.popclipextz](https://github.com/iamvicliu/PopClip-Extensions/releases/download/v1.0.3/IPLookup.popclipextz) |
+| [PhoneLookup](./PhoneLookup.popclipext) | 号码查询 | 从选中文本中自动过滤空格、连字符与多余文字，查询一个或多个国内外手机号、固话、400/800 热线的归属地、运营商及骚扰/黄页标记；也可以一键打开百度详情 | [PhoneLookup.popclipextz](https://github.com/iamvicliu/PopClip-Extensions/releases/download/v1.1.0/PhoneLookup.popclipextz) |
 
 每个扩展的详细说明，点进它的目录看 README。
 
@@ -15,13 +16,13 @@
 1. 先安装 [PopClip](https://www.popclip.app/)。
 2. 在上面的表格里点「下载」，得到一个 `.popclipextz` 文件。
 3. 双击这个文件，PopClip 会弹窗问你是否安装，点「Install」。
-4. 之后选中符合条件的文字（比如一个 IP 地址），PopClip 的按钮里就会出现这个扩展。
+4. 之后选中符合条件的文字（比如一个 IP 地址或电话号码），PopClip 的按钮里就会出现这个扩展。
 
 所有版本都在 [Releases](https://github.com/iamvicliu/PopClip-Extensions/releases) 页面。
 
 ## 隐私
 
-有些扩展需要联网，比如 IP 查询会把你选中的 IP 地址发给查询服务。具体发到哪里，每个扩展的 README 里都写清楚了。
+有些扩展需要联网，比如 IP 查询或号码查询会把你选中的公网 IP 或国内电话号码发给查询服务。具体发到哪里，每个扩展的 README 里都写清楚了。
 
 ## 许可证
 
@@ -34,7 +35,8 @@ MIT。本仓库与 PopClip 官方无关联。
 ## 发布新版本
 
 ```bash
-./scripts/release-popclip.sh IPLookup.popclipext v1.0.2
+./scripts/release-popclip.sh IPLookup.popclipext v1.0.3
+./scripts/release-popclip.sh PhoneLookup.popclipext v1.1.0
 ```
 
 脚本会依次：把 README 里的下载链接改成新版本号、打包成 `.popclipextz`、打 tag、推送、创建或更新 GitHub Release 并上传安装包。运行前工作区必须是干净的。
@@ -45,7 +47,7 @@ MIT。本仓库与 PopClip 官方无关联。
 
 - 每个扩展是一个 `.popclipext` 源码目录，提交到 Git。
 - 打包出来的 `.popclipextz` 不提交，只作为 Release 附件上传。
-- 仓库结构支持 PopClip 官方扩展目录从个人 GitHub 仓库收录，当前 `include` 路径为 `include=IPLookup.popclipext`。
+- 仓库结构支持 PopClip 官方扩展目录从个人 GitHub 仓库收录，当前 `include` 路径如 `include=IPLookup.popclipext`、`include=PhoneLookup.popclipext`。
 
 ---
 
@@ -56,5 +58,6 @@ My collection of [PopClip](https://www.popclip.app/) extensions for macOS.
 | Extension | Name in PopClip | What it does | Download |
 | --- | --- | --- | --- |
 | [IPLookup](./IPLookup.popclipext) | IP Lookup | Select one or more IPv4 or IPv6 addresses (including `ip:port`) to see public location, ASN, and organization, with local classification for private ranges, or open a full details page | [IPLookup.popclipextz](https://github.com/iamvicliu/PopClip-Extensions/releases/download/v1.0.3/IPLookup.popclipextz) |
+| [PhoneLookup](./PhoneLookup.popclipext) | Phone Lookup | Extract and clean one or more domestic or international phone numbers from selected text to see location, carrier, and caller-ID / spam tags, or open Baidu search details | [PhoneLookup.popclipextz](https://github.com/iamvicliu/PopClip-Extensions/releases/download/v1.1.0/PhoneLookup.popclipextz) |
 
 To install, download the `.popclipextz` file and double-click it. All versions are on the [Releases](https://github.com/iamvicliu/PopClip-Extensions/releases) page. MIT licensed; not affiliated with PopClip.
