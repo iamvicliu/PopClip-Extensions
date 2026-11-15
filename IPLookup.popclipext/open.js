@@ -1,23 +1,45 @@
-function extractTokens(text) {
+const FILE_EXT_BLACKLIST = new Set([
+  "js", "ts", "jsx", "tsx", "py", "sh", "zsh", "bash", "rb", "php", "java", "kt", "swift",
+  "c", "cpp", "h", "hpp", "cs", "rs", "lua", "sql", "json", "yaml", "yml", "toml", "xml",
+  "html", "htm", "css", "scss", "less", "md", "txt", "log", "csv", "tsv", "ini", "conf",
+  "cfg", "env", "lock", "png", "jpg", "jpeg", "gif", "svg", "webp", "ico", "pdf", "doc",
+  "docx", "xls", "xlsx", "ppt", "pptx", "zip", "tar", "gz", "tgz", "7z", "rar", "dmg",
+  "pkg", "mp3", "mp4", "mov", "avi", "mkv", "wav", "flac", "wasm", "map", "vue", "svelte",
+]);
+
+function extractRawTokens(text) {
   return String(text || "")
     .replace(/[,;]/g, " ")
     .split(/\s+/)
-    .map((chunk) => {
-      let t = chunk.trim();
-      if (!t) return "";
-      if (t.startsWith("[") && t.includes("]")) {
-        t = t.slice(1, t.indexOf("]"));
-      } else if (t.includes(":") && t.indexOf(":") === t.lastIndexOf(":")) {
-        const idx = t.lastIndexOf(":");
-        const host = t.slice(0, idx);
-        const port = t.slice(idx + 1);
-        if (/^\d+$/.test(port)) {
-          t = host;
-        }
-      }
-      return t;
-    })
+    .map((chunk) => chunk.trim().replace(/^[("'«‹<]+|[)"'»›>。，、！？；：]+$/g, ""))
     .filter(Boolean);
+}
+
+function stripUrlAndPort(rawToken) {
+  let t = rawToken;
+  let hasScheme = false;
+  if (/^https?:\/\//i.test(t)) {
+    hasScheme = true;
+    t = t.replace(/^https?:\/\//i, "");
+  }
+  const slashIdx = t.search(/[/?#]/);
+  if (slashIdx !== -1) {
+    t = t.slice(0, slashIdx);
+  }
+  if (t.includes("@")) {
+    t = t.slice(t.lastIndexOf("@") + 1);
+  }
+  if (t.startsWith("[") && t.includes("]")) {
+    t = t.slice(1, t.indexOf("]"));
+  } else if (t.includes(":") && t.indexOf(":") === t.lastIndexOf(":")) {
+    const idx = t.lastIndexOf(":");
+    const host = t.slice(0, idx);
+    const port = t.slice(idx + 1);
+    if (/^\d+$/.test(port)) {
+      t = host;
+    }
+  }
+  return { host: t.replace(/\.$/, ""), hasScheme };
 }
 
 function isValidIPv4(input) {
@@ -58,10 +80,29 @@ function isValidIPv6(input) {
   return left >= 0 && right >= 0 && left + right < 8;
 }
 
-const selected = popclip.input.matchedText || popclip.input.text;
-for (const token of extractTokens(selected)) {
-  if (isValidIPv4(token) || isValidIPv6(token)) {
-    popclip.openUrl(`https://ipinfo.io/${token}`);
+function isValidDomain(host, hasScheme) {
+  if (!host || host.length > 253 || !host.includes(".")) return false;
+  const labels = host.toLowerCase().split(".");
+  if (labels.length < 2) return false;
+  for (const label of labels) {
+    if (!/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(label)) return false;
+  }
+  const tld = labels[labels.length - 1];
+  if (!/^(?:xn--[a-z0-9]+|[a-z]{2,24})$/.test(tld)) return false;
+  if (!hasScheme && FILE_EXT_BLACKLIST.has(tld)) return false;
+  return true;
+}
+
+const selected = popclip.input.matchedText || popclip.input.text || "";
+for (const raw of extractRawTokens(selected)) {
+  const { host, hasScheme } = stripUrlAndPort(raw);
+  if (!host) continue;
+  if (isValidIPv4(host) || isValidIPv6(host)) {
+    popclip.openUrl(`https://ipinfo.io/${host}`);
+    break;
+  }
+  if (isValidDomain(host, hasScheme)) {
+    popclip.openUrl(`https://ipinfo.io/${host.toLowerCase()}`);
     break;
   }
 }

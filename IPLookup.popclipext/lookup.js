@@ -1,28 +1,64 @@
 const axios = require("axios");
 
-const MAX_IPS = 10;
-const TIMEOUT_MS = 8000;
+const MAX_TARGETS = 8;
+const TIMEOUT_MS = 6000;
+const RDAP_TIMEOUT_MS = 3500;
 
-function extractTokens(text) {
+// 常见文件扩展名黑名单（当未带 http/https 协议头时排除纯文件名误触）
+const FILE_EXT_BLACKLIST = new Set([
+  "js", "ts", "jsx", "tsx", "py", "sh", "zsh", "bash", "rb", "php", "java", "kt", "swift",
+  "c", "cpp", "h", "hpp", "cs", "rs", "lua", "sql", "json", "yaml", "yml", "toml", "xml",
+  "html", "htm", "css", "scss", "less", "md", "txt", "log", "csv", "tsv", "ini", "conf",
+  "cfg", "env", "lock", "png", "jpg", "jpeg", "gif", "svg", "webp", "ico", "pdf", "doc",
+  "docx", "xls", "xlsx", "ppt", "pptx", "zip", "tar", "gz", "tgz", "7z", "rar", "dmg",
+  "pkg", "mp3", "mp4", "mov", "avi", "mkv", "wav", "flac", "wasm", "map", "vue", "svelte",
+]);
+
+const SECOND_LEVEL_TLDS = new Set([
+  "com.cn", "net.cn", "org.cn", "gov.cn", "edu.cn", "ac.cn",
+  "co.uk", "org.uk", "me.uk", "ac.uk", "gov.uk",
+  "co.jp", "ne.jp", "or.jp", "ac.jp", "go.jp",
+  "com.hk", "edu.hk", "gov.hk", "net.hk", "org.hk",
+  "com.tw", "org.tw", "edu.tw", "gov.tw", "net.tw",
+  "com.au", "net.au", "org.au", "edu.au", "gov.au",
+  "com.sg", "edu.sg", "gov.sg", "net.sg", "org.sg",
+  "co.kr", "ne.kr", "or.kr", "ac.kr", "go.kr",
+  "com.br", "com.mx", "com.tr", "co.in", "co.nz", "co.za",
+]);
+
+function extractRawTokens(text) {
   return String(text || "")
     .replace(/[,;]/g, " ")
     .split(/\s+/)
-    .map((chunk) => {
-      let t = chunk.trim();
-      if (!t) return "";
-      if (t.startsWith("[") && t.includes("]")) {
-        t = t.slice(1, t.indexOf("]"));
-      } else if (t.includes(":") && t.indexOf(":") === t.lastIndexOf(":")) {
-        const idx = t.lastIndexOf(":");
-        const host = t.slice(0, idx);
-        const port = t.slice(idx + 1);
-        if (/^\d+$/.test(port)) {
-          t = host;
-        }
-      }
-      return t;
-    })
+    .map((chunk) => chunk.trim().replace(/^[("'«‹<]+|[)"'»›>。，、！？；：]+$/g, ""))
     .filter(Boolean);
+}
+
+function stripUrlAndPort(rawToken) {
+  let t = rawToken;
+  let hasScheme = false;
+  if (/^https?:\/\//i.test(t)) {
+    hasScheme = true;
+    t = t.replace(/^https?:\/\//i, "");
+  }
+  const slashIdx = t.search(/[/?#]/);
+  if (slashIdx !== -1) {
+    t = t.slice(0, slashIdx);
+  }
+  if (t.includes("@")) {
+    t = t.slice(t.lastIndexOf("@") + 1);
+  }
+  if (t.startsWith("[") && t.includes("]")) {
+    t = t.slice(1, t.indexOf("]"));
+  } else if (t.includes(":") && t.indexOf(":") === t.lastIndexOf(":")) {
+    const idx = t.lastIndexOf(":");
+    const host = t.slice(0, idx);
+    const port = t.slice(idx + 1);
+    if (/^\d+$/.test(port)) {
+      t = host;
+    }
+  }
+  return { host: t.replace(/\.$/, ""), hasScheme };
 }
 
 function parseIPv4Octets(input) {
@@ -78,28 +114,60 @@ function expandIPv6Groups(input) {
   return [...left, ...new Array(missing).fill(0), ...right];
 }
 
-function parseUniqueIps(text) {
+function isValidDomain(host, hasScheme) {
+  if (!host || host.length > 253 || !host.includes(".")) return false;
+  const labels = host.toLowerCase().split(".");
+  if (labels.length < 2) return false;
+  for (const label of labels) {
+    if (!/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(label)) return false;
+  }
+  const tld = labels[labels.length - 1];
+  if (!/^(?:xn--[a-z0-9]+|[a-z]{2,24})$/.test(tld)) return false;
+  if (!hasScheme && FILE_EXT_BLACKLIST.has(tld)) return false;
+  return true;
+}
+
+function getRegistrableDomain(domain) {
+  const labels = domain.toLowerCase().split(".");
+  if (labels.length <= 2) return domain.toLowerCase();
+  const lastTwo = `${labels[labels.length - 2]}.${labels[labels.length - 1]}`;
+  if (SECOND_LEVEL_TLDS.has(lastTwo) && labels.length >= 3) {
+    return `${labels[labels.length - 3]}.${lastTwo}`;
+  }
+  return lastTwo;
+}
+
+function parseTargets(text) {
   const out = [];
   const seen = new Set();
-  for (const token of extractTokens(text)) {
-    const v4 = parseIPv4Octets(token);
+  for (const raw of extractRawTokens(text)) {
+    const { host, hasScheme } = stripUrlAndPort(raw);
+    if (!host) continue;
+
+    const v4 = parseIPv4Octets(host);
     if (v4) {
       const canonical = v4.join(".");
       if (!seen.has(canonical)) {
         seen.add(canonical);
-        out.push({ version: 4, text: canonical, octets: v4 });
+        out.push({ kind: "ip", version: 4, text: canonical, octets: v4 });
       }
     } else {
-      const v6 = expandIPv6Groups(token);
+      const v6 = expandIPv6Groups(host);
       if (v6) {
         const canonical = v6.map((g) => g.toString(16)).join(":");
         if (!seen.has(canonical)) {
           seen.add(canonical);
-          out.push({ version: 6, text: token.toLowerCase(), groups: v6 });
+          out.push({ kind: "ip", version: 6, text: host.toLowerCase(), groups: v6 });
+        }
+      } else if (isValidDomain(host, hasScheme)) {
+        const lower = host.toLowerCase();
+        if (!seen.has(lower)) {
+          seen.add(lower);
+          out.push({ kind: "domain", text: lower, rootDomain: getRegistrableDomain(lower) });
         }
       }
     }
-    if (out.length >= MAX_IPS) break;
+    if (out.length >= MAX_TARGETS) break;
   }
   return out;
 }
@@ -150,39 +218,122 @@ function classifyIPv6(g) {
   return null;
 }
 
-const selected = popclip.input.matchedText || popclip.input.text;
-const ips = parseUniqueIps(selected);
-
-if (ips.length === 0) {
-  return "IP Lookup: 选中的内容里没有合法的 IPv4 / IPv6 地址。";
-}
-
-const lines = [];
-for (const item of ips) {
-  const label = item.version === 4 ? classifyIPv4(item.octets) : classifyIPv6(item.groups);
-  if (label) {
-    lines.push(`${item.text} | ${label} | 本地判断，未联网`);
-    continue;
-  }
+async function fetchGeoIp(ipText) {
   try {
-    const response = await axios.get(`https://api.ip.sb/geoip/${item.text}`, {
+    const res = await axios.get(`https://api.ip.sb/geoip/${ipText}`, {
       timeout: TIMEOUT_MS,
-      headers: { "User-Agent": "PopClip-IPLookup/3" },
     });
-    const d = response.data || {};
-    const loc = [d.country, d.region, d.city].filter(Boolean).join(" / ");
-    const parts = [];
-    if (loc) parts.push(`位置: ${loc}`);
-    if (d.asn) parts.push(`ASN: ${d.asn}`);
-    if (d.organization) parts.push(`组织: ${d.organization}`);
-    if (d.ip && String(d.ip).toLowerCase() !== item.text.toLowerCase()) {
-      parts.push(`IP: ${d.ip}`);
+    if (res.data && (res.data.country || res.data.asn || res.data.organization)) {
+      return res.data;
     }
-    lines.push(`${item.text} | ${parts.length > 0 ? parts.join(" | ") : "接口未返回信息"}`);
-  } catch (err) {
-    const msg = err && err.message ? err.message : String(err);
-    lines.push(`${item.text} | 查询失败: ${msg}`);
-  }
+  } catch {}
+  return null;
 }
 
-return lines.join("\n");
+function formatGeoSummary(d, isSingle) {
+  if (!d) return "";
+  const locParts = [d.country, isSingle ? d.region : "", d.city].filter(Boolean);
+  const dedupLoc = locParts.filter((v, idx) => idx === 0 || v !== locParts[idx - 1]);
+  const loc = dedupLoc.join(" ");
+  const asnOrg = [d.asn ? `AS${d.asn}` : "", d.organization].filter(Boolean).join(" ");
+  return [loc, asnOrg].filter(Boolean).join(" · ");
+}
+
+async function resolveDnsViaAliDoh(domain) {
+  for (const qtype of [1, 28]) {
+    try {
+      const res = await axios.get(
+        `https://dns.alidns.com/resolve?name=${encodeURIComponent(domain)}&type=${qtype}`,
+        { timeout: TIMEOUT_MS }
+      );
+      const answers = (res.data && Array.isArray(res.data.Answer) && res.data.Answer) || [];
+      let ip = "";
+      let cname = "";
+      for (const ans of answers) {
+        if (ans.type === 5 && !cname && ans.data) {
+          cname = String(ans.data).replace(/\.$/, "");
+        } else if ((ans.type === 1 || ans.type === 28) && !ip && ans.data) {
+          ip = String(ans.data).trim();
+        }
+      }
+      if (ip) return { ip, cname };
+    } catch {}
+  }
+  return { ip: "", cname: "" };
+}
+
+async function fetchRdapExpiry(rootDomain) {
+  try {
+    const res = await axios.get(`https://rdap.org/domain/${encodeURIComponent(rootDomain)}`, {
+      timeout: RDAP_TIMEOUT_MS,
+    });
+    const events = (res.data && Array.isArray(res.data.events) && res.data.events) || [];
+    for (const ev of events) {
+      if (ev && ev.eventAction === "expiration" && ev.eventDate) {
+        return String(ev.eventDate).slice(0, 10);
+      }
+    }
+  } catch {}
+  return "";
+}
+
+async function lookupTarget(item, isSingle) {
+  if (item.kind === "ip") {
+    const privateLabel = item.version === 4 ? classifyIPv4(item.octets) : classifyIPv6(item.groups);
+    if (privateLabel) {
+      return `${item.text} · ${privateLabel}`;
+    }
+    const geo = await fetchGeoIp(item.text);
+    const summary = formatGeoSummary(geo, isSingle);
+    return summary ? `${item.text} · ${summary}` : `${item.text} · 未查到公网记录`;
+  }
+
+  // Domain lookup
+  const tld = item.text.split(".").pop();
+  if (["local", "lan", "internal", "localhost", "home", "arpa"].includes(tld)) {
+    return `${item.text} · 本地/内网域名`;
+  }
+
+  const [dnsInfo, expiry] = await Promise.all([
+    resolveDnsViaAliDoh(item.text),
+    fetchRdapExpiry(item.rootDomain),
+  ]);
+
+  const parts = [item.text];
+  if (dnsInfo.ip) {
+    parts.push(dnsInfo.ip);
+    const v4 = parseIPv4Octets(dnsInfo.ip);
+    const v6 = v4 ? null : expandIPv6Groups(dnsInfo.ip);
+    const privateLabel = v4 ? classifyIPv4(v4) : v6 ? classifyIPv6(v6) : null;
+    if (privateLabel) {
+      parts.push(privateLabel);
+    } else {
+      const geo = await fetchGeoIp(dnsInfo.ip);
+      const summary = formatGeoSummary(geo, isSingle);
+      if (summary) parts.push(summary);
+    }
+  } else {
+    parts.push("未解析到 A/AAAA 记录");
+  }
+
+  if (isSingle && dnsInfo.cname && dnsInfo.cname.toLowerCase() !== item.text) {
+    parts.push(`CNAME ${dnsInfo.cname}`);
+  }
+  if (expiry) {
+    parts.push(`到期 ${expiry}`);
+  }
+
+  return parts.join(" · ");
+}
+
+const selected = popclip.input.matchedText || popclip.input.text || "";
+const targets = parseTargets(selected);
+
+if (targets.length === 0) {
+  return "IP / 域名查询: 未在选中内容中识别到有效的 IPv4、IPv6 或域名。";
+}
+
+const isSingle = targets.length === 1;
+const results = await Promise.all(targets.map((item) => lookupTarget(item, isSingle)));
+
+return results.join("  |  ");
